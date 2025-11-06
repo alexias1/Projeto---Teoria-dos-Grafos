@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
-#include <tuple> // Para armazenar as arestas
+#include <tuple>
+#include <cstdio>
 
 using namespace std;
 
@@ -72,6 +73,13 @@ bool read_edges(const string& filename, ListaArestas& arestas, int& num_vertices
             cerr << "Erro ao ler aresta " << i + 1 << "." << endl;
             return false;
         }
+
+        // Checagem de validade do vértice
+        if (u < 1 || u > num_vertices || v < 1 || v > num_vertices) {
+            cerr << "Erro: Vertice " << u << " ou " << v << " fora do intervalo [1, " << num_vertices << "]." << endl;
+            return false;
+        }
+
         // Adiciona a aresta à lista: {peso, u, v}
         arestas.emplace_back(weight, u, v); 
     }
@@ -128,11 +136,11 @@ long long kruskal_algorithm(ListaArestas& arestas, int num_vertices, vector<pair
 void print_help() {
     cout << "Uso: ./kruskal -f <arquivo> [-s] [-o <saida>]" << endl;
     cout << "  -h : mostra este help" << endl;
-    cout << "  -f : indica o arquivo que contem o grafo de entrada (obrigatorio)" << endl;
-    cout << "  -s : mostra a solucao (arestas da AGM)" << endl;
     cout << "  -o : redireciona a saida para o arquivo" << endl;
-    cout << "  -i : vertice inicial (ignorado pelo Kruskal, mas aceito para compatibilidade)" << endl;
-}
+    cout << "  -f : indica o arquivo que contem o grafo de entrada" << endl;
+    cout << "  -s : mostra a solucao" << endl;
+    cout << "  -i : vertice inicial" << endl;
+}   
 
 int main(int argc, char* argv[]) {
     // Variáveis de controle de parâmetros
@@ -165,11 +173,15 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Checagem obrigatória: apenas o arquivo de entrada é essencial
-    if (filename.empty()) {
-        cerr << "Erro: O parametro -f e obrigatorio." << endl;
-        print_help();
-        return 1;
+    // Checagem obrigatória
+    if (filename.empty() || start_node_ignored == -1) {
+        if (start_node_ignored == -1) {
+        start_node_ignored = 1; // Ponto de partida padrão
+        }
+        if (filename.empty()) {
+            print_help();
+            return 1;
+        }
     }
     
     ListaArestas arestas; // Lista que armazenará todas as arestas
@@ -183,7 +195,6 @@ int main(int argc, char* argv[]) {
     vector<pair<int, int>> mst_edges; // Vetor para armazenar as arestas da AGM
     
     // 2. Execução do Algoritmo de Kruskal
-    // Kruskal não precisa do nó inicial
     long long cost = kruskal_algorithm(arestas, num_vertices, mst_edges);
 
     // 3. Configuração da Saída (stdout ou arquivo)
@@ -199,15 +210,16 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // Output do custo
-    *out << cost << endl;
-
-    // Output da solução (-s)
+    // Output do custo OU da solução, mas NUNCA ambos.
     if (show_solution) {
+        // Output da solução (-s)
         for (const auto& edge : mst_edges) {
             *out << "(" << edge.first << "," << edge.second << ") ";
         }
-        *out << endl;
+        std::putc('\n', stdout);
+    } else {
+        // Output do custo (apenas se -s NÃO foi solicitado)
+        std::putc('\n', stdout);
     }
 
     return 0;

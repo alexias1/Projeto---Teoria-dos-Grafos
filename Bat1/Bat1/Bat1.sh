@@ -27,7 +27,7 @@ echo "Testando algoritmo de Kruskal"
 for i in instances/*.mtx
 do
 	echo -e "\e[33mInstância $i\e[0m";
-	val=$($kruskal -f $i);
+	val=$($kruskal -f $i | tr -d '[:space:]');
 	correto=$(grep $i gabarito_agm.txt | cut -d ' ' -f 2);
 	[ $val -eq $correto ] && echo -e "Custo \e[32mOK\e[0m" || echo  -e "\e[31mCusto incorreto\e[0m";
 
@@ -47,7 +47,7 @@ echo "Testando algoritmo de Prim"
 for i in instances/*.mtx
 do
 	echo -e "\e[33mInstância $i\e[0m";
-	val=$($prim -f $i);
+	val=$($prim -f $i -i 1 | tr -d '[:space:]');
 	correto=$(grep $i gabarito_agm.txt | cut -d ' ' -f 2);
 	[ $val -eq $correto ] && echo -e "Custo \e[32mOK\e[0m" || echo  -e "\e[31mCusto incorreto\e[0m";
 
@@ -65,7 +65,7 @@ echo "Testando algoritmo de Dijkstra"
 for i in instances/*.mtx
 do
 	echo -e "\e[33mInstância $i\e[0m";
-	$dijkstra -f $i > temp;
+	$dijkstra -f $i -i 1 > temp;
 
 	j=$(basename $i);
 	diff -w temp ./sp/$j > /dev/null ;

@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <queue>
-#include <limits> // Para numeric_limits
+#include <limits>
 #include <algorithm>
 #include <sstream>
 
@@ -75,16 +75,15 @@ vector<long long> dijkstra_algorithm(const Grafo& adj, int num_vertices, int sta
             distancias[i] = -1; // Vértice inalcançável
         }
     }
-
     return distancias;
 }
 
 void print_help() {
     cout << "Uso: ./dijkstra -f <arquivo> -i <vertice_inicial> [-o <saida>]" << endl;
     cout << "  -h : mostra este help" << endl;
-    cout << "  -f : indica o arquivo que contem o grafo de entrada (obrigatorio)" << endl;
-    cout << "  -i : vertice inicial (obrigatorio)" << endl;
     cout << "  -o : redireciona a saida para o arquivo" << endl;
+    cout << "  -f : indica o arquivo que contem o grafo de entrada" << endl;
+    cout << "  -i : vertice inicial" << endl;
 }
 
 bool read_graph(const string& filename, Grafo& adj, int& num_vertices) {
@@ -120,14 +119,11 @@ bool read_graph(const string& filename, Grafo& adj, int& num_vertices) {
     return true;
 }
 
-// ** A função dijkstra_algorithm deve estar implementada acima desta função **
-
 int main(int argc, char* argv[]) {
     // Variáveis de controle de parâmetros
     string filename = "";
     int start_node = -1;
     string output_file = "";
-    // O parâmetro -s (mostrar solução) não é usado no Dijkstra
     bool show_solution_ignored = false; 
 
     // 1. Parsing de Argumentos
@@ -154,9 +150,13 @@ int main(int argc, char* argv[]) {
 
     // 2. Checagem obrigatória: -f e -i
     if (filename.empty() || start_node == -1) {
-        cerr << "Erro: Os parametros -f e -i sao obrigatorios." << endl;
-        print_help();
-        return 1;
+        if (start_node == -1) {
+        start_node = 1; // Ponto de partida padrão
+        }
+        if (filename.empty()) {
+            print_help();
+            return 1;
+        }
     }
     
     Grafo adj;

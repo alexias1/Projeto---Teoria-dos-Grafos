@@ -15,8 +15,8 @@ using Grafo = vector<vector<int>>;
 void print_help() {
     cout << "Uso: ./kosaraju -f <arquivo> [-o <saida>]" << endl;
     cout << "  -h : mostra este help" << endl;
-    cout << "  -f : indica o arquivo que contem o grafo de entrada (obrigatorio)" << endl;
     cout << "  -o : redireciona a saida para o arquivo" << endl;
+    cout << "  -f : indica o arquivo que contem o grafo de entrada" << endl;
 }
 
 // Função de Leitura (para Grafo Direcionado, sem pesos)

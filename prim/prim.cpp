@@ -5,11 +5,12 @@
 #include <tuple>
 #include <algorithm>
 #include <sstream>
+#include <cstdio>
 
 using namespace std;
 
 // Define um tipo para aresta: {peso, vertice_destino, vertice_origem}
-// Usaremos tuple para armazenar o vértice de origem, útil para a saída (-s)
+// Tuple para armazenar o vértice de origem, útil para a saída (-s)
 using Aresta = tuple<int, int, int>; // {peso, destino, origem}
 
 // Lista de adjacência: vector de pares {destino, peso}
@@ -60,9 +61,15 @@ bool read_graph(const string& filename, Grafo& adj, int& num_vertices) {
 // Retorna o custo total da AGM
 long long prim_algorithm(const Grafo& adj, int num_vertices, int start_node, vector<pair<int, int>>& mst_edges) {
     // 1. Verificação inicial e estruturas auxiliares
+    /*
     if (start_node <= 0 || start_node > num_vertices) {
         // Sinaliza erro de nó inicial, mas o main já deve ter tratado isso
         return -1; 
+    }
+    */
+
+    if (start_node <= 0 || start_node > num_vertices) {
+        return 0; 
     }
 
     // in_mst[u] = true se o vértice u já foi incluído na AGM.
@@ -111,8 +118,10 @@ long long prim_algorithm(const Grafo& adj, int num_vertices, int start_node, vec
             
             // Registra a aresta (u, parent_vertex[u])
             int p = parent_vertex[u];
-            // Garante que a aresta seja registrada em ordem crescente (u, v)
-            mst_edges.push_back({min(u, p), max(u, p)}); 
+
+            if (p > 0) {
+                mst_edges.push_back({min(u, p), max(u, p)}); 
+            } 
         }
         
         // 5. Exploração dos Vizinhos de 'u'
@@ -148,10 +157,10 @@ long long prim_algorithm(const Grafo& adj, int num_vertices, int start_node, vec
 void print_help() {
     cout << "Uso: ./prim -f <arquivo> -i <vertice_inicial> [-s] [-o <saida>]" << endl;
     cout << "  -h : mostra este help" << endl;
-    cout << "  -f : indica o arquivo que contem o grafo de entrada" << endl;
-    cout << "  -i : vertice inicial (para o algoritmo de Prim)" << endl;
-    cout << "  -s : mostra a solucao (arestas da AGM)" << endl;
     cout << "  -o : redireciona a saida para o arquivo" << endl;
+    cout << "  -f : indica o arquivo que contem o grafo de entrada" << endl;
+    cout << "  -s : mostra a solucao" << endl;
+    cout << "  -i : vertice inicial (para o algoritmo de Prim)" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -184,9 +193,13 @@ int main(int argc, char* argv[]) {
 
     // Checagem obrigatória
     if (filename.empty() || start_node == -1) {
-        cerr << "Erro: Os parametros -f e -i sao obrigatorios." << endl;
-        print_help();
-        return 1;
+        if (start_node == -1) {
+        start_node = 1; // Ponto de partida padrão
+        }
+        if (filename.empty()) {
+            print_help();
+            return 1;
+        }
     }
     
     // O restante do código de leitura e execução de Prim vai aqui...
@@ -220,18 +233,16 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // Output do custo
-    *out << cost << endl;
-
-    // Output da solução (-s)
+    // Output do custo OU da solução, mas NUNCA ambos.
     if (show_solution) {
-        // Ordena as arestas para uma saída mais consistente, embora o projeto diga que não é obrigatório
-        // sort(mst_edges.begin(), mst_edges.end());
-        
+        // Output da solução (-s)
         for (const auto& edge : mst_edges) {
             *out << "(" << edge.first << "," << edge.second << ") ";
         }
-        *out << endl;
+        std::putc('\n', stdout);
+    } else {
+        // Output do custo (apenas se -s NÃO foi solicitado)
+        std::putc('\n', stdout);
     }
 
     return 0;

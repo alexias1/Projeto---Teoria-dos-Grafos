@@ -143,15 +143,11 @@ void print_help() {
 }   
 
 int main(int argc, char* argv[]) {
-    // Variáveis de controle de parâmetros
     string filename = "";
     bool show_solution = false;
     string output_file = "";
-    
-    // O Kruskal não precisa de start_node, mas o projeto permite o parâmetro
     int start_node_ignored = -1; 
 
-    // Loop para processar argumentos
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg == "-h") {
@@ -164,40 +160,29 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-o" && i + 1 < argc) {
             output_file = argv[++i];
         } else if (arg == "-i" && i + 1 < argc) {
-             // Aceita o parâmetro -i, mas o ignora para o Kruskal
             try {
                 start_node_ignored = stoi(argv[++i]);
-            } catch (...) {
-                // Não faz nada, o Kruskal não usa
-            }
+            } catch (...) { }
         }
     }
 
-    // Checagem obrigatória
-    if (filename.empty() || start_node_ignored == -1) {
-        if (start_node_ignored == -1) {
-        start_node_ignored = 1; // Ponto de partida padrão
-        }
-        if (filename.empty()) {
-            print_help();
-            return 1;
-        }
+    if (filename.empty()) {
+        print_help();
+        return 1;
     }
     
-    ListaArestas arestas; // Lista que armazenará todas as arestas
+    ListaArestas arestas;
     int num_vertices;
     
-    // 1. Leitura do Grafo (Arestas)
     if (!read_edges(filename, arestas, num_vertices)) {
         return 1;
     }
 
-    vector<pair<int, int>> mst_edges; // Vetor para armazenar as arestas da AGM
+    vector<pair<int, int>> mst_edges;
     
-    // 2. Execução do Algoritmo de Kruskal
     long long cost = kruskal_algorithm(arestas, num_vertices, mst_edges);
 
-    // 3. Configuração da Saída (stdout ou arquivo)
+    // Configuração da Saída (stdout ou arquivo)
     ostream* out = &cout;
     ofstream outfile;
     if (!output_file.empty()) {
@@ -206,20 +191,27 @@ int main(int argc, char* argv[]) {
             out = &outfile;
         } else {
             cerr << "Erro: Nao foi possivel abrir o arquivo de saida: " << output_file << endl;
-            // Se o arquivo não abrir, imprime no stdout
         }
     }
     
-    // Output do custo OU da solução, mas NUNCA ambos.
+    // *** CORREÇÃO: Formatação de Saída (if/else) e printf ***
     if (show_solution) {
-        // Output da solução (-s)
+        // Se -s está presente, imprime APENAS a solução
         for (const auto& edge : mst_edges) {
             *out << "(" << edge.first << "," << edge.second << ") ";
         }
-        std::putc('\n', stdout);
+        *out << '\n';
+
     } else {
-        // Output do custo (apenas se -s NÃO foi solicitado)
-        std::putc('\n', stdout);
+        // Se -s NÃO está presente, imprime APENAS o custo
+        if (out == &cout) {
+            // Se a saída for stdout (o script lê daqui), use printf para 
+            // garantir a formatação LF (\n) e evitar o CRLF (\r\n) do Windows.
+            printf("%lld\n", cost);
+        } else {
+            // Se for para arquivo (-o), C++ streams são seguros
+            *out << cost << '\n';
+        }
     }
 
     return 0;

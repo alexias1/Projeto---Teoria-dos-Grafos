@@ -5,6 +5,7 @@
 #include <limits>
 #include <algorithm>
 #include <sstream>
+#include <cstdio>
 
 using namespace std;
 
@@ -120,9 +121,8 @@ bool read_graph(const string& filename, Grafo& adj, int& num_vertices) {
 }
 
 int main(int argc, char* argv[]) {
-    // Variáveis de controle de parâmetros
     string filename = "";
-    int start_node = -1;
+    int start_node = -1; // Padrão é -1 (inválido)
     string output_file = "";
     bool show_solution_ignored = false; 
 
@@ -148,29 +148,26 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // 2. Checagem obrigatória: -f e -i
-    if (filename.empty() || start_node == -1) {
-        if (start_node == -1) {
-        start_node = 1; // Ponto de partida padrão
-        }
-        if (filename.empty()) {
-            print_help();
-            return 1;
-        }
+    // *** CORREÇÃO: Lidar com -i ausente (Script Original) ***
+    if (filename.empty()) {
+        print_help();
+        return 1;
+    }
+    // Se o -i não foi fornecido (ainda é -1), assume 1 como padrão.
+    if (start_node == -1) {
+        start_node = 1; 
     }
     
     Grafo adj;
     int num_vertices;
     
-    // 3. Leitura do Grafo
     if (!read_graph(filename, adj, num_vertices)) {
         return 1;
     }
 
-    // 4. Execução do Dijkstra
     vector<long long> distancias = dijkstra_algorithm(adj, num_vertices, start_node);
 
-    // 5. Configuração da Saída (stdout ou arquivo)
+    // Configuração da Saída (stdout ou arquivo)
     ostream* out = &cout;
     ofstream outfile;
     if (!output_file.empty()) {
@@ -179,16 +176,23 @@ int main(int argc, char* argv[]) {
             out = &outfile;
         } else {
             cerr << "Erro: Nao foi possivel abrir o arquivo de saida: " << output_file << endl;
-            // Se o arquivo não abrir, imprime no stdout
         }
     }
     
-    // 6. Output das Distâncias (Formato: 1:d1 2:d2 3:d3 ...)
-    for (int i = 1; i <= num_vertices; ++i) {
-        // Imprime o vértice e a distância (tratando -1 para inalcançável)
-        *out << i << ":" << distancias[i] << " ";
+    // *** CORREÇÃO: Formatação de Saída (printf) ***
+    if (out == &cout) {
+        // Se for stdout (o script lê daqui), use printf
+        for (int i = 1; i <= num_vertices; ++i) {
+            printf("%d:%lld ", i, distancias[i]);
+        }
+        printf("\n");
+    } else {
+        // Se for para arquivo (-o), C++ streams são seguros
+        for (int i = 1; i <= num_vertices; ++i) {
+            *out << i << ":" << distancias[i] << " ";
+        }
+        *out << '\n';
     }
-    *out << endl;
 
     return 0;
 }

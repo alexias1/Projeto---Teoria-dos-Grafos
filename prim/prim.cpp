@@ -165,7 +165,7 @@ void print_help() {
 
 int main(int argc, char* argv[]) {
     string filename = "";
-    int start_node = -1;
+    int start_node = -1; // Padrão é -1 (inválido)
     bool show_solution = false;
     string output_file = "";
 
@@ -191,37 +191,28 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Checagem obrigatória
-    if (filename.empty() || start_node == -1) {
-        if (start_node == -1) {
-        start_node = 1; // Ponto de partida padrão
-        }
-        if (filename.empty()) {
-            print_help();
-            return 1;
-        }
+    // *** CORREÇÃO 1: Lidar com -i ausente (Script Original) ***
+    if (filename.empty()) {
+        print_help();
+        return 1;
+    }
+    // Se o -i não foi fornecido (ainda é -1), assume 1 como padrão.
+    if (start_node == -1) {
+        start_node = 1; 
     }
     
-    // O restante do código de leitura e execução de Prim vai aqui...
     Grafo adj;
     int num_vertices;
     
-    // 1. Leitura
     if (!read_graph(filename, adj, num_vertices)) {
         return 1;
     }
 
     vector<pair<int, int>> mst_edges;
     
-    // 2. Execução
     long long cost = prim_algorithm(adj, num_vertices, start_node, mst_edges);
-
-    if (cost == -1) {
-        cerr << "Erro na execucao do algoritmo de Prim." << endl;
-        return 1;
-    }
-
-    // 3. Saída (com ou sem -o)
+    
+    // Configuração da Saída (stdout ou arquivo)
     ostream* out = &cout;
     ofstream outfile;
     if (!output_file.empty()) {
@@ -232,17 +223,26 @@ int main(int argc, char* argv[]) {
             cerr << "Erro: Nao foi possivel abrir o arquivo de saida: " << output_file << endl;
         }
     }
-    
-    // Output do custo OU da solução, mas NUNCA ambos.
+
+    // *** CORREÇÃO 2: Formatação de Saída (if/else) e printf ***
     if (show_solution) {
-        // Output da solução (-s)
+        // Se -s está presente, imprime APENAS a solução
+        // Usamos *out aqui, pois a saída -s para arquivo (-o) deve funcionar
         for (const auto& edge : mst_edges) {
             *out << "(" << edge.first << "," << edge.second << ") ";
         }
-        std::putc('\n', stdout);
+        *out << '\n'; // '\n' é mais seguro que endl para compatibilidade
+
     } else {
-        // Output do custo (apenas se -s NÃO foi solicitado)
-        std::putc('\n', stdout);
+        // Se -s NÃO está presente, imprime APENAS o custo
+        if (out == &cout) {
+            // Se a saída for stdout (o script lê daqui), use printf para 
+            // garantir a formatação LF (\n) e evitar o CRLF (\r\n) do Windows.
+            printf("%lld\n", cost);
+        } else {
+            // Se for para arquivo (-o), C++ streams são seguros
+            *out << cost << '\n';
+        }
     }
 
     return 0;
